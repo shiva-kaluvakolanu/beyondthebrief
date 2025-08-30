@@ -16,8 +16,15 @@ title: Home
 
 <section id="about">
   <h2>About the Author</h2>
-  <p>Hi, I'm Shiva K. (SRMK), passionate about Cyber Security, Business Analysis, Project Management, and more!</p>
+  <p>Hi, I'm Shiva Kaluvakolanu. (SRMK), passionate about Cyber Security, Business Analysis, Project Management, and more!</p>
 </section>
+
+# Welcome to Beyond the Brief
+
+## Blog Posts
+- [Welcome to Beyond the Brief](https://shiva-kaluvakolanu.github.io/beyondthebrief/)
+- [Clinical Costing Dashboard](https://shiva-kaluvakolanu.github.io/beyondthebrief/dashboard/clinical-costing-dashboard.html)
+- [COVID-19 PPP Dashboard](https://shiva-kaluvakolanu.github.io/beyondthebrief/dashboard/covid-19-ppp.html)
 
 <img src="path/to/your/image.jpg" alt="Description" />
 
