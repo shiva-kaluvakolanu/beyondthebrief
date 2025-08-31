@@ -1,0 +1,380 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MVP LMS Prototype</title>
+  <style>
+    :root{
+      --bg:#0b0d10;--panel:#141820;--muted:#1c2330;--accent:#60a5fa;--accent-2:#34d399;--text:#e5e7eb;--sub:#a6adbb;--card:#0f131a;--border:#263042;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;background:var(--bg);color:var(--text)}
+    a{color:inherit}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    /* Layout */
+    .app{display:flex;min-height:100vh}
+    .sidebar{width:260px;background:var(--panel);border-right:1px solid var(--border);padding:1rem;display:flex;flex-direction:column;gap:.5rem;position:sticky;top:0;height:100vh}
+    .brand{display:flex;align-items:center;gap:.6rem;font-weight:700;margin-bottom:.25rem}
+    .brand .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+    .side-link{padding:.65rem .75rem;border-radius:.75rem;color:var(--sub);text-decoration:none;border:1px solid transparent}
+    .side-link.active, .side-link:hover{background:var(--muted);border-color:var(--border);color:var(--text)}
+
+    .main{flex:1;display:flex;flex-direction:column}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:rgba(20,24,32,.6);backdrop-filter:saturate(180%) blur(8px)}
+    .title{font-size:1.15rem;font-weight:700}
+
+    .container{padding:1.25rem;}
+    .grid{display:grid;gap:1rem}
+    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:1rem;padding:1rem;box-shadow:0 2px 0 rgba(0,0,0,.15)}
+    .card h3{margin:.25rem 0 .5rem 0;font-size:1rem}
+    .muted{color:var(--sub)}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem .9rem;border-radius:.8rem;background:var(--accent);color:#081018;font-weight:700;border:none;cursor:pointer;box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
+    .btn.secondary{background:var(--muted);color:var(--text)}
+    .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .stack{display:flex;gap:.5rem;flex-wrap:wrap}
+
+    .list{display:flex;flex-direction:column;gap:.5rem}
+    .row{display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;border:1px dashed var(--border);border-radius:.7rem;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.00))}
+
+    .chip{font-size:.8rem;background:var(--card);padding:.25rem .5rem;border-radius:999px;border:1px solid var(--border);color:var(--sub)}
+
+    /* Login view */
+    .login-wrap{max-width:420px;margin:8vh auto 0;}
+    .logo-circle{width:56px;height:56px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:#081018;font-weight:900;box-shadow:0 8px 30px rgba(52,211,153,.25)}
+    .field{display:flex;flex-direction:column;gap:.35rem;margin:.75rem 0}
+    .input{padding:.7rem .9rem;border-radius:.8rem;border:1px solid var(--border);background:var(--panel);color:var(--text)}
+    .select{padding:.7rem .9rem;border-radius:.8rem;border:1px solid var(--border);background:var(--panel);color:var(--text)}
+    .helper{font-size:.8rem;color:var(--sub)}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .sidebar{display:none}
+      .grid.cols-2{grid-template-columns:1fr}
+      .grid.cols-3{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app" aria-live="polite"></div>
+
+  <template id="sidebar">
+    <aside class="sidebar" role="navigation">
+      <div class="brand" aria-label="Site brand">
+        <div class="logo-circle dot" aria-hidden="true"></div>
+        <span>LMS Prototype</span>
+      </div>
+      <a data-nav="dashboard" href="#" class="side-link active">Dashboard</a>
+      <a data-nav="courses" href="#" class="side-link">My Courses</a>
+      <a data-nav="schedule" href="#" class="side-link">Schedule</a>
+      <a data-nav="content" href="#" class="side-link">Content</a>
+      <div style="margin-top:auto"></div>
+      <button class="side-link" id="logoutBtn" aria-label="Log out">Log out</button>
+    </aside>
+  </template>
+
+  <template id="topbar">
+    <header class="topbar">
+      <div class="title" id="pageTitle">Dashboard</div>
+      <div class="stack">
+        <span class="chip" id="whoami">role</span>
+        <button class="btn ghost" id="openAbout">About</button>
+      </div>
+    </header>
+  </template>
+
+  <template id="login">
+    <main class="container login-wrap">
+      <div class="card" aria-labelledby="loginTitle">
+        <div class="stack" style="align-items:center;gap:1rem">
+          <div class="logo-circle">L</div>
+          <div>
+            <h1 id="loginTitle" style="margin:0">Login</h1>
+            <p class="muted" style="margin:.2rem 0 0">Use any username & password (demo). Select a role to preview different dashboards.</p>
+          </div>
+        </div>
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="username">Username</label>
+            <input id="username" class="input" placeholder="e.g. alex" required />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password" class="input" placeholder="••••••••" required />
+          </div>
+          <div class="field">
+            <label for="role">Role</label>
+            <select id="role" class="select" aria-label="Choose a role">
+              <option value="admin">Administrator</option>
+              <option value="teacher">Teacher</option>
+              <option value="student" selected>Student</option>
+            </select>
+            <span class="helper">This is a prototype—no real authentication.</span>
+          </div>
+          <div class="stack" style="margin-top:1rem">
+            <button class="btn" type="submit">Log in</button>
+            <button class="btn secondary" type="button" id="fillDemo">Use demo user</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </template>
+
+  <template id="admin-dashboard">
+    <div class="container">
+      <div class="grid cols-2" style="margin-bottom:1rem">
+        <div class="card">
+          <h3>Add Student</h3>
+          <p class="muted">Quickly enrol a student into one or more courses.</p>
+          <div class="stack"><input class="input" placeholder="Full name"/><input class="input" placeholder="Email"/>
+            <button class="btn">Add</button></div>
+        </div>
+        <div class="card">
+          <h3>Add Teacher</h3>
+          <p class="muted">Invite or assign an instructor.</p>
+          <div class="stack"><input class="input" placeholder="Full name"/><input class="input" placeholder="Email"/>
+            <button class="btn">Invite</button></div>
+        </div>
+        <div class="card">
+          <h3>Course Information</h3>
+          <div class="list">
+            <div class="row"><span>Cert IV Cyber Security</span><span class="chip">12 units</span></div>
+            <div class="row"><span>Make Presentations (BSBCMM411)</span><span class="chip">3 weeks</span></div>
+            <div class="row"><span>Write Simple Documents (BSBWRT311)</span><span class="chip">2 weeks</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Schedule</h3>
+          <div class="list">
+            <div class="row"><span>Mon 09:00 – 11:00</span><span class="chip">Room A</span></div>
+            <div class="row"><span>Wed 13:00 – 15:00</span><span class="chip">Room B</span></div>
+            <div class="row"><span>Fri 10:00 – 12:00</span><span class="chip">Online</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Users</h3>
+        <div class="list" id="adminUsers"></div>
+      </div>
+    </div>
+  </template>
+
+  <template id="teacher-dashboard">
+    <div class="container">
+      <div class="card">
+        <h3>My Courses</h3>
+        <div class="list">
+          <div class="row"><span>Power BI for VET Trainers</span><span class="chip">28 students</span></div>
+          <div class="row"><span>Cyber Security Industry Project</span><span class="chip">18 students</span></div>
+        </div>
+      </div>
+      <div class="grid cols-2" style="margin-top:1rem">
+        <div class="card">
+          <h3>Content Visibility</h3>
+          <div class="list">
+            <div class="row"><span>Week 1 – Orientation</span><button class="btn ghost" onclick="toggleChip(this)">Visible</button></div>
+            <div class="row"><span>Week 2 – Assessment Brief</span><button class="btn ghost" onclick="toggleChip(this)">Hidden</button></div>
+            <div class="row"><span>Week 3 – Lab</span><button class="btn ghost" onclick="toggleChip(this)">Visible</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Schedule</h3>
+          <div class="list">
+            <div class="row"><span>Tue 10:00 – 11:30</span><span class="chip">Room C</span></div>
+            <div class="row"><span>Thu 14:00 – 16:00</span><span class="chip">Online</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="student-dashboard">
+    <div class="container">
+      <div class="card">
+        <h3>My Courses</h3>
+        <div class="list">
+          <div class="row"><span>Cyber Security Industry Project</span><span class="chip">In progress</span></div>
+          <div class="row"><span>Make Presentations (BSBCMM411)</span><span class="chip">Due Sun</span></div>
+        </div>
+      </div>
+      <div class="grid cols-2" style="margin-top:1rem">
+        <div class="card">
+          <h3>Carousel Page</h3>
+          <div id="carousel" class="list"></div>
+          <div class="stack" style="margin-top:.75rem">
+            <button class="btn" id="prevSlide">Prev</button>
+            <button class="btn" id="nextSlide">Next</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Schedule</h3>
+          <div class="list">
+            <div class="row"><span>Mon 09:00 – 11:00</span><span class="chip">Room A</span></div>
+            <div class="row"><span>Wed 13:00 – 15:00</span><span class="chip">Room B</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="about-modal">
+    <div class="container">
+      <div class="card">
+        <h3>About this MVP</h3>
+        <p class="muted">Single-file prototype that mimics role-based views for Admin, Teacher, and Student. Replace fake data with your backend later.</p>
+        <ul>
+          <li>Responsive layout with sidebar navigation</li>
+          <li>Accessible landmarks & labels</li>
+          <li>LocalStorage "session" for demo login</li>
+        </ul>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    const $ = (sel,root=document)=>root.querySelector(sel);
+    const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
+
+    const state = {
+      session: null,
+      view: 'login',
+      route: 'dashboard',
+      slides:[
+        {title:'Welcome to the Course', meta:'Start here →'},
+        {title:'Week 1 Resources', meta:'Slides & readings'},
+        {title:'Assessment Brief', meta:'Due next week'},
+      ],
+      slideIndex:0,
+      demoUsers:[
+        {name:'Alex Chen', email:'alex.chen@example.com', role:'student'},
+        {name:'Priya Nair', email:'priya.nair@example.com', role:'teacher'},
+        {name:'Sam Wright', email:'sam.wright@example.com', role:'student'},
+        {name:'Jamie Lee', email:'jamie.lee@example.com', role:'admin'},
+      ],
+    };
+
+    function setSession(s){
+      state.session = s; localStorage.setItem('mvp_session', JSON.stringify(s));
+    }
+    function getSession(){
+      try { return JSON.parse(localStorage.getItem('mvp_session')); } catch(e){ return null }
+    }
+
+    function render(){
+      const app = $('#app');
+      app.innerHTML = '';
+
+      if(!state.session){ // LOGIN
+        const login = document.importNode($('#login').content,true);
+        app.appendChild(login);
+        bindLogin();
+        return;
+      }
+
+      // App shell
+      const wrap = document.createDocumentFragment();
+      const sidebar = document.importNode($('#sidebar').content,true);
+      const topbar = document.importNode($('#topbar').content,true);
+      wrap.append(sidebar, topbar);
+
+      const main = document.createElement('main');
+      main.className = 'main';
+      main.appendChild(topbar);
+
+      const pageTitle = $('#pageTitle', main);
+      $('#whoami', main).textContent = state.session.role;
+      $('#openAbout', main).onclick = ()=>mount($('#about-modal'));
+
+      // Sidebar nav
+      const side = wrap.querySelector('.sidebar');
+      side.addEventListener('click', (e)=>{
+        const a = e.target.closest('[data-nav]');
+        if(!a) return;
+        e.preventDefault();
+        state.route = a.getAttribute('data-nav');
+        $$('.side-link', side).forEach(el=>el.classList.toggle('active', el===a));
+        pageTitle.textContent = a.textContent.trim();
+      });
+      $('#logoutBtn', side).onclick = ()=>{ localStorage.removeItem('mvp_session'); state.session=null; render(); };
+
+      // Dashboard by role
+      const role = state.session.role;
+      let tplId = 'student-dashboard';
+      if(role==='teacher') tplId = 'teacher-dashboard';
+      if(role==='admin') tplId = 'admin-dashboard';
+
+      const dash = document.importNode($('#'+tplId).content,true);
+      main.appendChild(dash);
+      app.appendChild(side);
+      app.appendChild(main);
+
+      // role specific bindings
+      if(role==='admin') mountAdmin();
+      if(role==='student') mountStudent();
+    }
+
+    function mount(tpl){
+      const main = $('.main');
+      const node = document.importNode(tpl.content,true);
+      main.appendChild(node);
+    }
+
+    function bindLogin(){
+      $('#fillDemo').onclick = ()=>{
+        $('#username').value = 'student01';
+        $('#password').value = 'password';
+        $('#role').value = 'student';
+      };
+      $('#loginForm').addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const username = $('#username').value.trim();
+        const role = $('#role').value;
+        if(!username) return alert('Enter a username');
+        setSession({ username, role });
+        state.view='app';
+        render();
+      });
+    }
+
+    function mountAdmin(){
+      const list = $('#adminUsers');
+      state.demoUsers.forEach(u=>{
+        const row = document.createElement('div');
+        row.className='row';
+        row.innerHTML = `<span>${u.name} <span class="muted">(${u.role})</span></span><span class="chip">${u.email}</span>`;
+        list.appendChild(row);
+      })
+    }
+
+    function mountStudent(){
+      const container = $('#carousel');
+      function draw(){
+        container.innerHTML='';
+        const slide = state.slides[state.slideIndex];
+        const el = document.createElement('div');
+        el.className='row';
+        el.innerHTML = `<span>${slide.title}</span><span class="chip">${slide.meta}</span>`;
+        container.appendChild(el);
+      }
+      draw();
+      $('#prevSlide').onclick = ()=>{ state.slideIndex = (state.slideIndex-1+state.slides.length)%state.slides.length; draw(); };
+      $('#nextSlide').onclick = ()=>{ state.slideIndex = (state.slideIndex+1)%state.slides.length; draw(); };
+    }
+
+    function toggleChip(btn){
+      btn.textContent = btn.textContent === 'Visible' ? 'Hidden' : 'Visible';
+    }
+
+    // init
+    const cached = getSession();
+    if(cached) state.session = cached;
+    render();
+  </script>
+</body>
+</html>
